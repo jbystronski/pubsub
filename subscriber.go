@@ -1,8 +1,8 @@
 package pubsub
 
 type Subscriber struct {
-	broker *Broker
-	queue  map[string][]Message
+	*Broker
+	queue map[string][]Message
 }
 
 func (s *Subscriber) EnqueueMessage(label string, m Message) {
@@ -27,17 +27,17 @@ func (s *Subscriber) DequeueMessage(label string) Message {
 }
 
 func NewSubscriber(b *Broker) *Subscriber {
-	return &Subscriber{broker: b, queue: map[string][]Message{}}
+	return &Subscriber{b, map[string][]Message{}}
 }
 
 func (s *Subscriber) Subscribe(topic string, fn func(m Message)) {
-	s.broker.addSubscriber(topic, s, fn)
+	s.addSubscriber(topic, s, fn)
 }
 
-func (s *Subscriber) Publish(topic string, m Message) {
-	s.broker.Publish(topic, m)
-}
+// func (s *Subscriber) Publish(topic string, m Message) {
+// 	s.broker.Publish(topic, m)
+// }
 
 func (s *Subscriber) Unsubscribe(topic string) {
-	s.broker.removeSubscriber(topic, s)
+	s.removeSubscriber(topic, s)
 }
