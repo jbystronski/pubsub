@@ -24,15 +24,6 @@ func (s *Subscriber) DequeueMessage(label string) Message {
 		}
 	}
 	return m
-	// m = s.Queue[label][0]
-
-	// if len(s.Queue[label]) > 0 {
-	// 	s.Queue[label] = s.Queue[label][1:]
-	// } else {
-	// 	delete(s.Queue, label)
-	// }
-
-	// return m
 }
 
 func NewSubscriber(b *Broker) *Subscriber {
@@ -41,6 +32,10 @@ func NewSubscriber(b *Broker) *Subscriber {
 
 func (s *Subscriber) Subscribe(topic string, fn func(m Message)) {
 	s.broker.addSubscriber(topic, s, fn)
+}
+
+func (s *Subscriber) Publish(topic string, m Message) {
+	s.broker.Publish(topic, m)
 }
 
 func (s *Subscriber) Unsubscribe(topic string) {

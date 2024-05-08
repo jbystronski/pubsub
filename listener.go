@@ -3,13 +3,12 @@ package pubsub
 type Listener struct {
 	events,
 	globalEvents map[Event]func()
-	after,
-	before map[Event]func()
+
 	eventChan chan Event
 }
 
 func NewListener() *Listener {
-	return &Listener{map[Event]func(){}, map[Event]func(){}, map[Event]func(){}, map[Event]func(){}, make(chan Event, 1)}
+	return &Listener{map[Event]func(){}, map[Event]func(){}, make(chan Event, 1)}
 }
 
 func (l Listener) Passthrough(e Event, n *Node) {
