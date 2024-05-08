@@ -140,3 +140,67 @@ func TestGlobalEvent(t *testing.T) {
 	emitter.Passthrough(event, emitter.Next)
 	wg.Wait()
 }
+
+func TestUnlinkNext(t *testing.T) {
+	broker := pubsub.NewBroker()
+
+	one, two, three := pubsub.NewNode(broker), pubsub.NewNode(broker), pubsub.NewNode(broker)
+
+	one.LinkTo(two).LinkTo(three)
+
+	one.UnlinkNext()
+
+	if one.Next != three {
+		t.Errorf("ulink next fails")
+	}
+}
+
+func TestUnlinkPrev(t *testing.T) {
+	broker := pubsub.NewBroker()
+
+	one, two, three := pubsub.NewNode(broker), pubsub.NewNode(broker), pubsub.NewNode(broker)
+
+	one.LinkTo(two).LinkTo(three)
+
+	three.UnlinkPrev()
+
+	if three.Prev != one {
+		t.Errorf("ulink prev fails")
+	}
+}
+
+func TestUnlinkAllPrev(t *testing.T) {
+	broker := pubsub.NewBroker()
+
+	one, two, three, four, five := pubsub.NewNode(broker), pubsub.NewNode(broker), pubsub.NewNode(broker), pubsub.NewNode(broker), pubsub.NewNode(broker)
+
+	one.LinkTo(two).LinkTo(three).LinkTo(four).LinkTo(five)
+
+	five.UnlinkAllPrev()
+
+	if five.Prev != nil {
+		t.Errorf("ulink prev all fails")
+	}
+
+	if five.First() != five {
+		t.Errorf("node five should be firts")
+	}
+}
+
+func TestUnlinkAll(t *testing.T) {
+	broker := pubsub.NewBroker()
+
+	one, two, three, four, five := pubsub.NewNode(broker), pubsub.NewNode(broker), pubsub.NewNode(broker), pubsub.NewNode(broker), pubsub.NewNode(broker)
+
+	one.LinkTo(two).LinkTo(three).LinkTo(four).LinkTo(five)
+
+	three.UnlinkAll()
+
+	if three.Last() != three {
+		t.Errorf("node three should be last")
+	}
+
+	if three.First() != three {
+		t.Errorf("node three should be first")
+	}
+}
