@@ -47,7 +47,7 @@ func (n *Node) UnlinkAll() {
 		last.Next = nil
 
 	}
-	n.Next.closeChan <- struct{}{}
+
 	n.Next = nil
 }
 
@@ -78,10 +78,12 @@ func (n *Node) watch() {
 				switch true {
 
 				case n.HasGlobal(e):
+
 					n.globalEvents[e]()
 					n.Passthrough(e, n.Next)
 
 				case n.HasLocal(e):
+
 					if n.HasNext() {
 						n.Passthrough(e, n.Next)
 					} else {
@@ -89,6 +91,7 @@ func (n *Node) watch() {
 					}
 
 				default:
+
 					n.Passthrough(e, n.Next)
 
 				}
