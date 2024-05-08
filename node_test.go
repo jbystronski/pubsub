@@ -1,19 +1,17 @@
-package node_test
+package pubsub
 
 import (
 	"fmt"
 	"sync"
 	"testing"
-
-	"github.com/jbystronski/pubsub"
 )
 
 func TestNode(t *testing.T) {
-	broker := pubsub.NewBroker()
+	broker := NewBroker()
 
-	first := pubsub.NewNode(broker)
-	second := pubsub.NewNode(broker)
-	third := pubsub.NewNode(broker)
+	first := NewNode(broker)
+	second := NewNode(broker)
+	third := NewNode(broker)
 
 	if first.HasNext() {
 		t.Errorf("Node 1 has no next sibling node")
@@ -27,11 +25,11 @@ func TestNode(t *testing.T) {
 
 	first.LinkTo(third)
 
-	if first.Next == second {
+	if first.next == second {
 		t.Errorf("Node 1 is node longer linked to node 2")
 	}
 
-	if first.Next != third {
+	if first.next != third {
 		t.Errorf("Node 1 is linked to node 3")
 	}
 
@@ -68,23 +66,23 @@ func TestLocalEvent(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(2)
 
-	broker := pubsub.NewBroker()
+	broker := NewBroker()
 
-	localEvent := pubsub.Event(1)
+	localEvent := Event(1)
 
-	emitter := pubsub.NewNode(broker)
-	first := pubsub.NewNode(broker)
-	second := pubsub.NewNode(broker)
-	third := pubsub.NewNode(broker)
+	emitter := NewNode(broker)
+	first := NewNode(broker)
+	second := NewNode(broker)
+	third := NewNode(broker)
 
 	emitter.LinkTo(first)
 
-	emitter.Passthrough(localEvent, emitter.Next)
+	emitter.Passthrough(localEvent, emitter.next)
 
 	first.On(localEvent, func() {
 		first.LinkTo(second)
 
-		first.Passthrough(localEvent, first.Next)
+		first.Passthrough(localEvent, first.next)
 
 		wg.Done()
 	})
@@ -96,11 +94,11 @@ func TestLocalEvent(t *testing.T) {
 	})
 	wg.Wait()
 
-	if first.Next != second {
+	if first.next != second {
 		t.Errorf("Local event not received in first node")
 	}
 
-	if second.Next != third {
+	if second.next != third {
 		t.Errorf("Local event not received in second node")
 	}
 }
@@ -110,17 +108,17 @@ func TestGlobalEvent(t *testing.T) {
 
 	wg.Add(2)
 
-	broker := pubsub.NewBroker()
+	broker := NewBroker()
 
-	event := pubsub.Event(1)
+	event := Event(1)
 
-	emitter := pubsub.NewNode(broker)
+	emitter := NewNode(broker)
 
-	one := pubsub.NewNode(broker)
-	two := pubsub.NewNode(broker)
-	three := pubsub.NewNode(broker)
-	four := pubsub.NewNode(broker)
-	five := pubsub.NewNode(broker)
+	one := NewNode(broker)
+	two := NewNode(broker)
+	three := NewNode(broker)
+	four := NewNode(broker)
+	five := NewNode(broker)
 
 	emitter.LinkTo(one).LinkTo(two).LinkTo(three).LinkTo(four).LinkTo(five)
 
@@ -137,48 +135,48 @@ func TestGlobalEvent(t *testing.T) {
 		fmt.Println("received global event in node five")
 		wg.Done()
 	})
-	emitter.Passthrough(event, emitter.Next)
+	emitter.Passthrough(event, emitter.next)
 	wg.Wait()
 }
 
 func TestUnlinkNext(t *testing.T) {
-	broker := pubsub.NewBroker()
+	broker := NewBroker()
 
-	one, two, three := pubsub.NewNode(broker), pubsub.NewNode(broker), pubsub.NewNode(broker)
+	one, two, three := NewNode(broker), NewNode(broker), NewNode(broker)
 
 	one.LinkTo(two).LinkTo(three)
 
 	one.UnlinkNext()
 
-	if one.Next != three {
+	if one.next != three {
 		t.Errorf("ulink next fails")
 	}
 }
 
 func TestUnlinkPrev(t *testing.T) {
-	broker := pubsub.NewBroker()
+	broker := NewBroker()
 
-	one, two, three := pubsub.NewNode(broker), pubsub.NewNode(broker), pubsub.NewNode(broker)
+	one, two, three := NewNode(broker), NewNode(broker), NewNode(broker)
 
 	one.LinkTo(two).LinkTo(three)
 
 	three.UnlinkPrev()
 
-	if three.Prev != one {
+	if three.prev != one {
 		t.Errorf("ulink prev fails")
 	}
 }
 
 func TestUnlinkAllPrev(t *testing.T) {
-	broker := pubsub.NewBroker()
+	broker := NewBroker()
 
-	one, two, three, four, five := pubsub.NewNode(broker), pubsub.NewNode(broker), pubsub.NewNode(broker), pubsub.NewNode(broker), pubsub.NewNode(broker)
+	one, two, three, four, five := NewNode(broker), NewNode(broker), NewNode(broker), NewNode(broker), NewNode(broker)
 
 	one.LinkTo(two).LinkTo(three).LinkTo(four).LinkTo(five)
 
 	five.UnlinkAllPrev()
 
-	if five.Prev != nil {
+	if five.prev != nil {
 		t.Errorf("ulink prev all fails")
 	}
 
@@ -188,9 +186,9 @@ func TestUnlinkAllPrev(t *testing.T) {
 }
 
 func TestUnlinkAll(t *testing.T) {
-	broker := pubsub.NewBroker()
+	broker := NewBroker()
 
-	one, two, three, four, five := pubsub.NewNode(broker), pubsub.NewNode(broker), pubsub.NewNode(broker), pubsub.NewNode(broker), pubsub.NewNode(broker)
+	one, two, three, four, five := NewNode(broker), NewNode(broker), NewNode(broker), NewNode(broker), NewNode(broker)
 
 	one.LinkTo(two).LinkTo(three).LinkTo(four).LinkTo(five)
 
