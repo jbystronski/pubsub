@@ -34,10 +34,6 @@ func (s *Subscriber) Subscribe(topic string, fn func(m Message)) {
 	s.addSubscriber(topic, s, fn)
 }
 
-// func (s *Subscriber) Publish(topic string, m Message) {
-// 	s.broker.Publish(topic, m)
-// }
-
 func (s *Subscriber) Unsubscribe(topic string) {
 	s.removeSubscriber(topic, s)
 }
