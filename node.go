@@ -7,7 +7,7 @@ func NewNode(b *Broker) *Node {
 }
 
 type Node struct {
-	Next, Prev *Node
+	next, prev *Node
 
 	*Listener
 
@@ -17,22 +17,22 @@ type Node struct {
 }
 
 func (n *Node) Last() *Node {
-	if n.Next != nil {
-		return n.Next.Last()
+	if n.next != nil {
+		return n.next.Last()
 	}
 
 	return n
 }
 
 func (n *Node) HasNext() bool {
-	return n.Next != nil
+	return n.next != nil
 }
 
 func (n *Node) First() *Node {
 	target := n
 
-	for target.Prev != nil {
-		target = target.Prev
+	for target.prev != nil {
+		target = target.prev
 	}
 
 	return target
@@ -47,53 +47,42 @@ func (n *Node) UnlinkAllPrev() {
 
 	for node != n {
 
-		next := node.Next
+		next := node.next
 		node.closeChan <- struct{}{}
 		node = next
 	}
 
-	n.Prev = nil
+	n.prev = nil
 }
 
 func (n *Node) UnlinkAllNext() {
 	last := n.Last()
 
 	for last != n {
-		last = last.Prev
-		last.Next.closeChan <- struct{}{}
-		last.Next = nil
+		last = last.prev
+		last.next.closeChan <- struct{}{}
+		last.next = nil
 
 	}
 
-	n.Next = nil
+	n.next = nil
 }
 
 func (n *Node) UnlinkAll() {
 	n.UnlinkAllPrev()
 	n.UnlinkAllNext()
-
-	last := n.Last()
-
-	for last != n {
-		last = last.Prev
-		last.Next.closeChan <- struct{}{}
-		last.Next = nil
-
-	}
-
-	n.Next = nil
 }
 
 func (n *Node) UnlinkNext() {
 	if n.HasNext() {
 
-		n.Next.closeChan <- struct{}{}
+		n.next.closeChan <- struct{}{}
 
-		if n.Next.HasNext() {
+		if n.next.HasNext() {
 
-			newNext := n.Next.Next
-			n.Next = nil
-			n.Next = newNext
+			newNext := n.next.next
+			n.next = nil
+			n.next = newNext
 
 		}
 
@@ -101,31 +90,39 @@ func (n *Node) UnlinkNext() {
 }
 
 func (n *Node) UnlinkPrev() {
-	if n.Prev != nil {
+	if n.prev != nil {
 
-		n.Prev.closeChan <- struct{}{}
+		n.prev.closeChan <- struct{}{}
 
-		if n.Prev.Prev != nil {
+		if n.prev.prev != nil {
 
-			newPrev := n.Prev.Prev
-			n.Prev = newPrev
-			n.Prev.Next = n
+			newPrev := n.prev.prev
+			n.prev = newPrev
+			n.prev.next = n
 
 		}
 
 	}
 }
 
+func (n *Node) Next() *Node {
+	return n.next
+}
+
+func (n *Node) Prev() *Node {
+	return n.prev
+}
+
 func (n *Node) Unlink() {
-	if n.Prev != nil {
-		n.Prev.Next.closeChan <- struct{}{}
-		n.Prev.Next = nil
+	if n.prev != nil {
+		n.prev.next.closeChan <- struct{}{}
+		n.prev.next = nil
 	}
 }
 
 func (n *Node) LinkTo(next *Node) *Node {
-	n.Next = next
-	next.Prev = n
+	n.next = next
+	next.prev = n
 
 	return next
 }
@@ -147,19 +144,19 @@ func (n *Node) watch() {
 				case n.HasGlobal(e):
 
 					n.globalEvents[e]()
-					n.Passthrough(e, n.Next)
+					n.Passthrough(e, n.next)
 
 				case n.HasLocal(e):
 
 					if n.HasNext() {
-						n.Passthrough(e, n.Next)
+						n.Passthrough(e, n.next)
 					} else {
 						n.events[e]()
 					}
 
 				default:
 
-					n.Passthrough(e, n.Next)
+					n.Passthrough(e, n.next)
 
 				}
 			}
