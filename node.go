@@ -38,7 +38,24 @@ func (n *Node) First() *Node {
 	return target
 }
 
-func (n *Node) UnlinkAll() {
+func (n *Node) UnlinkAllPrev() {
+	node := n.First()
+
+	if node == n {
+		return
+	}
+
+	for node != n {
+
+		next := node.Next
+		node.closeChan <- struct{}{}
+		node = next
+	}
+
+	n.Prev = nil
+}
+
+func (n *Node) UnlinkAllNext() {
 	last := n.Last()
 
 	for last != n {
@@ -49,6 +66,54 @@ func (n *Node) UnlinkAll() {
 	}
 
 	n.Next = nil
+}
+
+func (n *Node) UnlinkAll() {
+	n.UnlinkAllPrev()
+	n.UnlinkAllNext()
+
+	last := n.Last()
+
+	for last != n {
+		last = last.Prev
+		last.Next.closeChan <- struct{}{}
+		last.Next = nil
+
+	}
+
+	n.Next = nil
+}
+
+func (n *Node) UnlinkNext() {
+	if n.HasNext() {
+
+		n.Next.closeChan <- struct{}{}
+
+		if n.Next.HasNext() {
+
+			newNext := n.Next.Next
+			n.Next = nil
+			n.Next = newNext
+
+		}
+
+	}
+}
+
+func (n *Node) UnlinkPrev() {
+	if n.Prev != nil {
+
+		n.Prev.closeChan <- struct{}{}
+
+		if n.Prev.Prev != nil {
+
+			newPrev := n.Prev.Prev
+			n.Prev = newPrev
+			n.Prev.Next = n
+
+		}
+
+	}
 }
 
 func (n *Node) Unlink() {
@@ -71,6 +136,8 @@ func (n *Node) watch() {
 			select {
 
 			case <-n.closeChan:
+				close(n.closeChan)
+
 				return
 
 			case e := <-n.eventChan:
